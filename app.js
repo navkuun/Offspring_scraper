@@ -3,6 +3,13 @@ const { post } = require('superagent');
 const util = require('util');
 const { generateReferer,generateIP,generateUserAgent } = require('./Generators/Gen');
 
+/** TODO:
+* 1.) Pass akamai anti-bot, need to do this to be able to do everything else
+* 2.) Choose delivery options, set billing address and user information
+* 3.) Handle payment processing
+*/
+
+
 
 /** Returns object with randomly generated Ip, referer and userAgent.
  * @returns {object} genObj
@@ -55,17 +62,21 @@ class orderForm{
  */
 async function order(form){
     const prodURL= form.product_link; 
+    // Noticed that the product id always came after the last forward slash
+    // So wrote this to get that ID, no need to do a get req
     const prodID = prodURL.substring(prodURL.lastIndexOf('/') + 1) ;
-
+    
     // Allows for cookies to persist across requests.
     const agent = request.agent();
-
+    
+    // Generates 403 - ACCESS DENIED, needs to get past the Akamai anit-bot that enable the _acbk cookie
     console.log("Adding product to bag");
     await addProductToBasket(agent, prodID);
-
+    // Unable to reach this point without previous denial being fixed
     console.log("Submitting the items in the bag")
     await submitBasket(agent, prodID);
-
+	
+	// 
 
 }
 
@@ -77,14 +88,15 @@ async function addProductToBasket(agent, prodID){
     try{
         const bagURL = 'https://www.offspring.co.uk/view/basket/add';
         await agent.post(bagURL)
-            .send({productCode: prodID})
+            .send({productCode: prodID}) // Adds to bag
             .set(gens())
     }catch(err){
         throw new Error("Could not add product to the bag!");
     }
 }
 
-/**
+/** Submits all the items in the bag to checkout
+ * The website makes you add items to the bag -> then move securely to checkout 
  * @param {request.SuperAgentStatic} agent 
  * @param {string} product_code 
  */
@@ -92,7 +104,7 @@ async function submitBasket(agent, product_code){
     try{
         const submitURL = 'https://www.offspring.co.uk/view/component/basket/submit';
         await agent.post(submitURL)
-            .send({'entries[0].quantity': 1, 'entries[0].productCode': prodID})
+            .send({'entries[0].quantity': 1, 'entries[0].productCode': prodID}) // Need to scrape the CSRF token from website and add to this(I think)
             .set(gens())
     }catch{
         throw new Error("Could not submit the product from the bag!")
