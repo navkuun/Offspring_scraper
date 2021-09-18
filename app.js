@@ -30,7 +30,7 @@ function generateIP() {
  */
 async function get_cookies(agent) {
   try {
-    const res = await agent.get("https://akamapi-sv44j.ondigitalocean.app/os");
+    const res = await agent.get("");
     return res.body;
   } catch (err) {
     console.log(err);
