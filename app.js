@@ -13,15 +13,13 @@ const {
  */
 async function get_cookies(agent) {
   try {
-    const res = await agent.get("https://akamapi-sv44j.ondigitalocean.app/os");
-
+    const res = await agent.get("");
     return res.body;
   } catch (err) {
     console.log(err);
     throw new Error("Could not pass cookies from API!");
   }
 }
-
 /**
  * Information needed to complete an order
  */
@@ -207,7 +205,6 @@ async function setBillingAddress(agent, form) {
   }
 }
 /**
- *
  * @param {request.SuperAgentStatic} agent
  * @param {string} method
  */
