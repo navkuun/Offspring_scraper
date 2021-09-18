@@ -36,7 +36,7 @@ class orderForm {
    * @param {string} address_2
    * @param {string} city
    * @param {'collect' | 'standarduk'} delivery methods
-   * @param {'paypal' | 'creditCard'}
+   * @param {'paypal' | 'creditCard'} payment methods
    */
 
   constructor(
