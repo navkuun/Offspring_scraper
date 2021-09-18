@@ -1,11 +1,28 @@
 const { format } = require("path");
 const request = require("superagent");
 const util = require("util");
-const {
-  generateReferer,
-  generateIP,
-  generateUserAgent,
-} = require("./Generators/Gen");
+const { performance } = require("perf_hooks");
+const userAgents = require("Data/userAgents.js");
+const referers = require("Data/referers.js");
+const ips = require("Data/ips.js");
+
+function generateUserAgent() {
+  let randomIndex = Math.floor(
+    Math.random() * userAgents.list_of_userAgents.length
+  );
+  return userAgents.list_of_userAgents[randomIndex];
+}
+
+function generateReferer() {
+  let randomIndex = Math.floor(
+    Math.random() * referers.list_of_referers.length
+  );
+  return referers.list_of_referers[randomIndex];
+}
+function generateIP() {
+  let randomIndex = Math.floor(Math.random() * ips.list_of_ips.length);
+  return ips.list_of_ips[randomIndex];
+}
 
 /**
  * Returns cookie object from API
@@ -13,13 +30,14 @@ const {
  */
 async function get_cookies(agent) {
   try {
-    const res = await agent.get("");
+    const res = await agent.get("https://akamapi-sv44j.ondigitalocean.app/os");
     return res.body;
   } catch (err) {
     console.log(err);
     throw new Error("Could not pass cookies from API!");
   }
 }
+
 /**
  * Information needed to complete an order
  */
@@ -36,7 +54,7 @@ class orderForm {
    * @param {string} address_2
    * @param {string} city
    * @param {'collect' | 'standarduk'} delivery methods
-   * @param {'paypal' | 'creditCard'} payment methods
+   * @param {'paypal' | 'creditCard'}
    */
 
   constructor(
@@ -72,6 +90,7 @@ class orderForm {
  * @param {OrderForm} information form
  */
 async function order(form) {
+  const t0 = performance.now();
   const prodURL = form.product_link;
   const prodID = prodURL.substring(prodURL.lastIndexOf("/") + 1);
 
@@ -94,6 +113,29 @@ async function order(form) {
 
   console.log(paymentUrl);
   console.log("###SUCCESSFUL###");
+
+  const newPaymentUrl = interceptRedirect(agent, paymentUrl);
+
+  const t1 = performance.now();
+  console.log(util.format("Finished in %d seconds", (t1 - t0) / 1000));
+  // ^ about 3 seconds rn, before any optimizations
+
+  return newPaymentUrl;
+}
+
+/**
+ * @param {request.SuperAgentStatic} agent
+ * @param {string} paymentUrl
+ * @returns {Promise<string>}
+ */
+async function interceptRedirect(agent, paymentUrl) {
+  try {
+    await agent.get(paymentUrl).redirects(0);
+  } catch (err) {
+    return err.response.header.location;
+  }
+
+  throw new Error("Could not intercept redirect!");
 }
 
 /**
@@ -111,7 +153,7 @@ async function addProductToBasket(agent, prodID) {
       .set("cookie", `_abck=${_abck}; bm_sz=${bm_sz}`)
       .set("user-agent", generateUserAgent()) // gets random mobile user agent
       .set("referer", "https://www.offspring.co.uk")
-      .send({ productCode: 4279103590, wishlist: false }); // data that is being sent
+      .send({ productCode: prodID, wishlist: false }); // data that is being sent
   } catch (err) {
     console.log(err);
     throw new Error("Could not add product to the bag!");
@@ -242,13 +284,16 @@ async function getPaymentUrl(agent, paymentMethod) {
       .post(paypalURL)
       .set("cookie", `_abck=${_abck}; bm_sz=${bm_sz}`)
       .set("user-agent", generateUserAgent()) // gets random mobile user agent
-      .set("referer", "https://www.offspring.co.uk")
+      .set(
+        "referer",
+        "https://www.offspring.co.uk/view/checkout/content/singlePageCheckout"
+      )
       .send({
         paymentMode: paymentMethod,
         emailOptIn: "false",
         newsAlerts: "false",
       });
-    return res.body;
+    return res;
   } catch (err) {
     console.log(err);
     throw new Error("Could not find the payment url!");
@@ -267,7 +312,7 @@ const form = new orderForm(
   "8 Harewood Road ISLEWORTH",
   "London",
   "standarduk",
-  "paypal"
+  "creditCard"
 );
 
 order(form)
