@@ -7,26 +7,13 @@ const {
   generateUserAgent,
 } = require("./Generators/Gen");
 
-<<<<<<< HEAD
 /**
  * Returns cookie object from API
  * @returns {object} res.body
-=======
-/** TODO:
-* 1.) Pass akamai anti-bot, need to do this to be able to do everything else
-* 2.) Choose delivery options, set billing address and user information
-* 3.) Handle payment processing
 */
-
-
-
-/** Returns object with randomly generated Ip, referer and userAgent.
- * @returns {object} genObj
->>>>>>> 75fff809921fd77ac047104939aeab1485395cd0
- */
 async function get_cookies(agent) {
   try {
-    const res = await agent.get("https://akamapi-sv44j.ondigitalocean.app/os");
+    const res = await agent.get("");
 
     return res.body;
   } catch (err) {
@@ -83,7 +70,6 @@ class orderForm {
 /**
  * @param {OrderForm} information form
  */
-<<<<<<< HEAD
 async function order(form) {
 
   const prodURL = form.product_link;
@@ -102,25 +88,6 @@ async function order(form) {
   await setBillingAddress(agent, form);
   
 }
-=======
-async function order(form){
-    const prodURL= form.product_link; 
-    // Noticed that the product id always came after the last forward slash
-    // So wrote this to get that ID, no need to do a get req
-    const prodID = prodURL.substring(prodURL.lastIndexOf('/') + 1) ;
-    
-    // Allows for cookies to persist across requests.
-    const agent = request.agent();
-    
-    // Generates 403 - ACCESS DENIED, needs to get past the Akamai anit-bot that enable the _acbk cookie
-    console.log("Adding product to bag");
-    await addProductToBasket(agent, prodID);
-    // Unable to reach this point without previous denial being fixed
-    console.log("Submitting the items in the bag")
-    await submitBasket(agent, prodID);
-	
-	// 
->>>>>>> 75fff809921fd77ac047104939aeab1485395cd0
 
 /**
  * @param {request.SuperAgentStatic} agent
@@ -147,7 +114,6 @@ async function addProductToBasket(agent, prodID) {
  * @param {request.SuperAgentStatic} agent 
  * @param {string} method 
  */
-<<<<<<< HEAD
 async function choosingDeliveryMethod(agent, method) {
   try {
     switch (method) {
@@ -159,28 +125,16 @@ async function choosingDeliveryMethod(agent, method) {
         break;
       default:
         throw new Error("Could not choose the sdelivery method!");
-=======
-async function addProductToBasket(agent, prodID){
-    try{
-        const bagURL = 'https://www.offspring.co.uk/view/basket/add';
-        await agent.post(bagURL)
-            .send({productCode: prodID}) // Adds to bag
-            .set(gens())
-    }catch(err){
-        throw new Error("Could not add product to the bag!");
->>>>>>> 75fff809921fd77ac047104939aeab1485395cd0
     }
-  } catch {
+  }catch{
     throw new Error("Could not choose the delivery method!");
   }
 }
 
-/** Submits all the items in the bag to checkout
- * The website makes you add items to the bag -> then move securely to checkout 
+/** 
  * @param {request.SuperAgentStatic} agent 
  * @param {string} deliveryMethod 
  */
-<<<<<<< HEAD
 async function setDeliveryMethod(agent, deliveryMethod) {
   try {
     const deliveryURL = "https://www.offspring.co.uk/view/component/singlepagecheckout/setDeliveryMode";
@@ -197,17 +151,6 @@ async function setDeliveryMethod(agent, deliveryMethod) {
   } catch {
     throw new Error("Could not set standard delivery!");
   }
-=======
-async function submitBasket(agent, product_code){
-    try{
-        const submitURL = 'https://www.offspring.co.uk/view/component/basket/submit';
-        await agent.post(submitURL)
-            .send({'entries[0].quantity': 1, 'entries[0].productCode': prodID}) // Need to scrape the CSRF token from website and add to this(I think)
-            .set(gens())
-    }catch{
-        throw new Error("Could not submit the product from the bag!")
-    }
->>>>>>> 75fff809921fd77ac047104939aeab1485395cd0
 }
 
 /**
@@ -268,3 +211,4 @@ const form = new orderForm(
 order(form)
   .then((x) => console.log(x))
   .catch((x) => console.log(x));
+
